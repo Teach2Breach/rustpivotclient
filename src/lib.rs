@@ -5,7 +5,7 @@ use std::io::copy;
 use std::net::{Shutdown, TcpStream, SocketAddr, SocketAddrV4, SocketAddrV6, Ipv4Addr, Ipv6Addr, ToSocketAddrs};
 use std::{thread};
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+type MyResult<T> = std::Result::Result<T, Box<dyn std::error::Error>>;
 
 /// Version of socks
 const SOCKS_VERSION: u8 = 0x05;
@@ -84,15 +84,15 @@ pub struct MyClient {
 }
 
 impl MyClient {
-    pub fn new(port: u16,  ip: &str, auth_methods: Vec<u8>) -> Result<Self> {
-        Ok( Client{
+    pub fn new(port: u16,  ip: &str, auth_methods: Vec<u8>) -> MyResult<Self> {
+        Ok( MyClient{
             ip: ip.to_string(),
             port,
             auth_methods,
         })
     }
 
-    pub fn serve(&mut self) -> Result<()> {
+    pub fn serve(&mut self) -> MyResult<()> {
         loop {
             match TcpStream::connect((&self.ip[..],self.port)){
                 Ok(stream) => {
@@ -136,12 +136,12 @@ impl SOCKClient {
     }
 
     /// Shutdown a client
-    pub fn shutdown(&mut self) -> Result<()> {
+    pub fn shutdown(&mut self) -> MyResult<()> {
         self.stream.shutdown(Shutdown::Both)?;
         Ok(())
     }
 
-    fn init(&mut self) -> Result<()> {
+    fn init(&mut self) -> MyResult<()> {
         // perform the preflight check 
         // this is handled by clients_server, client side proxy
         // code never sees this take place
@@ -174,7 +174,7 @@ impl SOCKClient {
         Ok(())
     }
 
-    fn auth(&mut self) -> Result<()> {
+    fn auth(&mut self) -> MyResult<()> {
         //debug!("Authenticating w/ {}", self.stream.peer_addr()?.ip());
         // Get valid auth methods
         let methods = self.get_avalible_methods()?;
@@ -201,7 +201,7 @@ impl SOCKClient {
     }
 
     /// Handles a client
-    pub fn handle_client(&mut self) -> Result<()> {
+    pub fn handle_client(&mut self) -> MyResult<()> {
             let req = SOCKSReq::from_stream(&mut self.stream)?;
             
             if req.addr_type == AddrType::V6 {
@@ -253,7 +253,7 @@ impl SOCKClient {
     }
 
     /// Return the avalible methods based on `self.auth_nmethods`
-    fn get_avalible_methods(&mut self) -> Result<Vec<u8>> {
+    fn get_avalible_methods(&mut self) -> MyResult<Vec<u8>> {
         let mut methods: Vec<u8> = Vec::with_capacity(self.auth_nmethods as usize);
         for _ in 0..self.auth_nmethods {
             let mut method = [0u8; 1];
@@ -267,7 +267,7 @@ impl SOCKClient {
 }
 
 /// Convert an address and AddrType to a SocketAddr
-fn addr_to_socket(addr_type: &AddrType, addr: &[u8], port: u16) -> Result<Vec<SocketAddr>> {
+fn addr_to_socket(addr_type: &AddrType, addr: &[u8], port: u16) -> MyResult<Vec<SocketAddr>> {
     match addr_type {
         AddrType::V6 => {
             let new_addr = (0..8).map(|x| {
@@ -308,7 +308,7 @@ struct SOCKSReq {
 
 impl SOCKSReq {
     /// Parse a SOCKS Req from a TcpStream
-    fn from_stream(stream: &mut TcpStream) -> Result<Self> {
+    fn from_stream(stream: &mut TcpStream) -> MyResult<Self> {
         let mut packet = [0u8; 4];
         // Read a byte from the stream and determine the version being requested
         stream.read_exact(&mut packet)?;
@@ -340,7 +340,7 @@ impl SOCKSReq {
         };
 
         // Get Addr from addr_type and stream
-        let addr: Result<Vec<u8>> = match addr_type {
+        let addr: MyResult<Vec<u8>> = match addr_type {
             AddrType::Domain => {
                 let mut dlen = [0u8; 1];
                 stream.read_exact(&mut dlen)?;
