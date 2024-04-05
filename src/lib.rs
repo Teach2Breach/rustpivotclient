@@ -5,7 +5,7 @@ use std::io::copy;
 use std::net::{Shutdown, TcpStream, SocketAddr, SocketAddrV4, SocketAddrV6, Ipv4Addr, Ipv6Addr, ToSocketAddrs};
 use std::{thread};
 
-type MyResult<T> = std::Result::Result<T, Box<dyn std::error::Error>>;
+type MyResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 /// Version of socks
 const SOCKS_VERSION: u8 = 0x05;
