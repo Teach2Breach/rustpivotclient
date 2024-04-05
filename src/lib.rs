@@ -77,13 +77,13 @@ pub enum AuthMethods {
     NoMethods = 0xFF
 }
 
-pub struct Client {
+pub struct MyClient {
     ip: String,
     port: u16,
     auth_methods: Vec<u8>
 }
 
-impl Client {
+impl MyClient {
     pub fn new(port: u16,  ip: &str, auth_methods: Vec<u8>) -> Result<Self> {
         Ok( Client{
             ip: ip.to_string(),
